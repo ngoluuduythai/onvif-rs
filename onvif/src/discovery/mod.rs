@@ -84,14 +84,18 @@ pub struct Device {
 ///     println!("Devices found: {:?}", devices);
 /// };
 /// ```
-pub async fn discover(duration: Duration) -> Result<impl Stream<Item = Device>, Error> {
+pub async fn discover(duration: Duration, local_ipv4: Option<Ipv4Addr>) -> Result<impl Stream<Item = Device>, Error> {
     let probe = build_probe();
     let probe_xml = yaserde::ser::to_string(&probe).map_err(Error::Serde)?;
 
     debug!("Probe XML: {}", probe_xml);
 
     let socket = {
-        const LOCAL_IPV4_ADDR: Ipv4Addr = Ipv4Addr::UNSPECIFIED;
+        let LOCAL_IPV4_ADDR: Ipv4Addr = match local_ipv4 {
+            Some(ipv4) => ipv4,
+            None => Ipv4Addr::UNSPECIFIED,
+         };
+    
         const LOCAL_PORT: u16 = 0;
 
         const MULTI_IPV4_ADDR: Ipv4Addr = Ipv4Addr::new(239, 255, 255, 250);
